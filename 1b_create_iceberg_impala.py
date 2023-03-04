@@ -20,8 +20,9 @@ cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
 
 variables=cml.get_environment_variables()
 IMPALA_HOST=variables['IMPALA_HOST']
-USERNAME=variables['PROJECT_OWNER']
+
 uservariables=cml.get_user()
+USERNAME=uservariables['username']
 USERPASS=uservariables['environment']['WORKLOAD_PASSWORD']
 variables
 # Connect to Impala using Impyla
