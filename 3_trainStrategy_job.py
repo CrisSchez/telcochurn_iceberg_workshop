@@ -33,6 +33,15 @@ PROJECT_NAME = os.getenv("CDSW_PROJECT")
 
 # Instantiate API Wrapper
 cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
+
+uservariables=cml.get_user()
+if uservariables['username'][-3] == '0':
+  DATABASE = "u"+uservariables['username'][-3:]
+else:
+  #DATABASE = uservariables['username']
+  DATABASE = 'u001'
+
+
 runtimes=cml.get_runtimes()
 runtimes=runtimes['runtimes']
 runtimesdf = pd.DataFrame.from_dict(runtimes, orient='columns')
@@ -111,7 +120,11 @@ hadoop_user = os.environ['HADOOP_USER_NAME']
 
 # To get more detailed information about the hive table you can run this:
 #df = spark.sql("SELECT * FROM default.telco_iceberg_kafka").toPandas()
-df = spark.sql("SELECT * FROM default.telco_iceberg_string2").toPandas()
+df = spark.sql("SELECT * FROM "+ DATABASE + ".telco_data_curated").toPandas()
+
+df['tenure']=df['tenure'].str.replace(",",".")
+df['monthlycharges']=df['monthlycharges'].str.replace(",",".")
+df['totalcharges']=df['totalcharges'].str.replace(",",".")
 
 df['tenure']=pd.to_numeric(df['tenure'])
 df['monthlycharges']=pd.to_numeric(df['monthlycharges'])
