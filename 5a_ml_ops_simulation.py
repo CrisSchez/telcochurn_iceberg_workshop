@@ -106,7 +106,28 @@ from cmlbootstrap import CMLBootstrap
 import seaborn as sns
 import copy
 
+import time
+import os
+import sys
 
+from cmlbootstrap import CMLBootstrap
+# Set the setup variables needed by CMLBootstrap
+HOST = os.getenv("CDSW_API_URL").split(
+    ":")[0] + "://" + os.getenv("CDSW_DOMAIN")
+USERNAME = os.getenv("CDSW_PROJECT_URL").split(
+    "/")[6]  # args.username  # "vdibia"
+API_KEY = os.getenv("CDSW_API_KEY") 
+PROJECT_NAME = os.getenv("CDSW_PROJECT")  
+
+# Instantiate API Wrapper
+cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)  
+
+uservariables=cml.get_user()
+if uservariables['username'][-3] == '0':
+  DATABASE = "u"+uservariables['username'][-3:]
+else:
+  #DATABASE = uservariables['username']
+  DATABASE = 'u001'
 ## Set the model ID
 # Get the model id from the model you deployed in step 5. These are unique to each 
 # model on CML.
@@ -130,34 +151,25 @@ spark = SparkSession\
     
 
 #dfcurrent = spark.sql("SELECT * FROM default.telco_iceberg_kafka").toPandas()
-dfcurrent = spark.sql("SELECT * FROM default.telco_iceberg_string2").toPandas()
+dfcurrent = spark.sql("SELECT * FROM "+ DATABASE + ".telco_data_curated").toPandas()
+
+dfcurrent['tenure']=dfcurrent['tenure'].str.replace(",",".")
+dfcurrent['monthlycharges']=dfcurrent['monthlycharges'].str.replace(",",".")
+dfcurrent['totalcharges']=dfcurrent['totalcharges'].str.replace(",",".")
 
 
 dfcurrent['tenure']=pd.to_numeric(dfcurrent['tenure'])
 dfcurrent['monthlycharges']=pd.to_numeric(dfcurrent['monthlycharges'])
 dfcurrent['totalcharges']=pd.to_numeric(dfcurrent['totalcharges'])
 
-import time
-import os
-import sys
 
-from cmlbootstrap import CMLBootstrap
-# Set the setup variables needed by CMLBootstrap
-HOST = os.getenv("CDSW_API_URL").split(
-    ":")[0] + "://" + os.getenv("CDSW_DOMAIN")
-USERNAME = os.getenv("CDSW_PROJECT_URL").split(
-    "/")[6]  # args.username  # "vdibia"
-API_KEY = os.getenv("CDSW_API_KEY") 
-PROJECT_NAME = os.getenv("CDSW_PROJECT")  
-
-# Instantiate API Wrapper
-cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)  
+  
 project_id = cml.get_project()['id']
 params = {"projectId":project_id,"latestModelDeployment":True,"latestModelBuild":True}
 
 modeltest=cml.get_models(params)[0]
 #icebergHistory=spark.read.format("iceberg").load("spark_catalog.default.telco_iceberg_kafka.history").toPandas()
-icebergHistory=spark.read.format("iceberg").load("spark_catalog.default.telco_iceberg_string2.history").toPandas()
+icebergHistory=spark.read.format("iceberg").load("spark_catalog."+ DATABASE + ".telco_data_curated.history").toPandas()
 
 
 
@@ -181,13 +193,17 @@ print(icebergHistory['made_current_at'][changeDate.idxmin()])
 #    .table("spark_catalog.default.telco_iceberg_kafka").toPandas()
 df=spark.read\
     .option("snapshot-id", icebergHistory['snapshot_id'][changeDate.idxmin()])\
-    .table("spark_catalog.default.telco_iceberg_string2").toPandas()
+    .table("spark_catalog."+ DATABASE + ".telco_data_curated").toPandas()
+df['tenure']=df['tenure'].str.replace(",",".")
+df['monthlycharges']=df['monthlycharges'].str.replace(",",".")
+df['totalcharges']=df['totalcharges'].str.replace(",",".")
 
+    
 df['tenure']=pd.to_numeric(df['tenure'])
 df['monthlycharges']=pd.to_numeric(df['monthlycharges'])
 df['totalcharges']=pd.to_numeric(df['totalcharges'])
 df['churn']=dfcurrent['churn']
-model_id = pd.DataFrame(cml.get_models(params))['id'].min()
+model_id = str(pd.to_numeric(pd.DataFrame(cml.get_models(params))['id']).min())
 latest_model = cml.get_model({"id": model_id, "latestModelDeployment": True, "latestModelBuild": True})
 
 Model_CRN = latest_model ["crn"]
