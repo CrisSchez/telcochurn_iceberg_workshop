@@ -37,6 +37,8 @@ PROJECT_NAME = os.getenv("CDSW_PROJECT")
 # Instantiate API Wrapper
 cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
 
+
+
 # Set the STORAGE environment variable
 try : 
   storage=os.environ["STORAGE"]
@@ -54,7 +56,7 @@ except:
   os.environ["STORAGE"] = storage
   
 #set impala host
-IMPALA_HOST='coordinator-se-sandbox-impala-cdw.dw-se-sandboxx-aws.a465-9q4k.cloudera.site'
+IMPALA_HOST='coordinator-virtual-warehouse-1.dw-spain-hol.z20f-vg26.cloudera.site'
 impala_environment_params = {"IMPALA_HOST":IMPALA_HOST}
 storage_environment = cml.create_environment_variable(impala_environment_params)
 
