@@ -179,13 +179,21 @@ telco_data.coalesce(1).write.csv(
 
 spark.sql("show databases").show()
 
+uservariables=cml.get_user()
+USERNAME=uservariables['username']
+if uservariables['username'][-3] == '0':
+  DATABASE = "u"+uservariables['username'][-3:]
+else:
+  #DATABASE = uservariables['username']
+  DATABASE = 'u001'
+  
 spark.sql("show tables in default").show()
 
 # Create the Hive table
 # This is here to create the table in Hive used be the other parts of the project, if it
 # does not already exist.
 
-if ('telco_churn' not in list(spark.sql("show tables in default").toPandas()['tableName'])):
+if ('telco_churn' not in list(spark.sql("show tables in "+USERNAME).toPandas()['tableName'])):
     print("creating the telco_churn database")
     telco_data\
         .write.format("parquet")\
@@ -200,17 +208,17 @@ spark.sql("select * from default.telco_churn").show()
 # this line is better to be run from hue impala
 try:
   #spark.sql("CREATE or REPLACE TABLE telco_iceberg USING iceberg AS SELECT * FROM default.telco_churn")
-  telco_data.write.format("iceberg").mode("overwrite").saveAsTable('default.telco_iceberg')
+  telco_data.write.format("iceberg").mode("overwrite").saveAsTable(USERNAME +'.telco_iceberg')
 
 except:
   print("iceberg table already created")
   # To get more detailed information about the hive table you can run this:
-spark.sql("describe formatted default.telco_iceberg").toPandas()
-spark.read.format("iceberg").load("spark_catalog.default.telco_iceberg.history").show()
+spark.sql("describe formatted "+ USERNAME + ".telco_iceberg").toPandas()
+spark.read.format("iceberg").load("spark_catalog."+ DATABASE + ".telco_data_curated.history").show()
 
 # To get more detailed information about the hive table you can run this:
 #spark.sql("describe formatted default.telco_churn").toPandas()
-exec(open("1b_create_iceberg_impala.py").read())
+#exec(open("1b_create_iceberg_impala.py").read())
 # Other ways to access data
 
 # To access data from other locations, refer to the
