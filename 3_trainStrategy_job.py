@@ -36,10 +36,10 @@ cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
 
 uservariables=cml.get_user()
 if uservariables['username'][-3] == '0':
-  DATABASE = "u"+uservariables['username'][-3:]
+  DATABASE = "user"+uservariables['username'][-3:]
 else:
   #DATABASE = uservariables['username']
-  DATABASE = 'u001'
+  DATABASE = 'user001'
 
 
 runtimes=cml.get_runtimes()
@@ -211,9 +211,9 @@ if len(sys.argv) == 2:
                     
                       # Create the YAML file for the model lineage
             yaml_text = \
-                """"ModelOpsChurn":
+                """"ModelOpsChurn_default":
               hive_table_qualified_names:                # this is a predefined key to link to training data
-                - "default.telco_iceberg@cm"               # the qualifiedName of the hive_table object representing                
+                - "default.telco_data_curated@cm"               # the qualifiedName of the hive_table object representing                
               metadata:                                  # this is a predefined key for additional metadata
                 query: "select * from historical_data"   # suggested use case: query used to extract training data
                 training_file: "3_trainStrategy_job.py"       # suggested use case: training file used
@@ -221,6 +221,21 @@ if len(sys.argv) == 2:
 
             with open('lineage.yml', 'w') as lineage:
                 lineage.write(yaml_text)
+            #read input file
+            fin = open("lineage.yml", "rt")
+            #read file contents to string
+            data = fin.read()
+            #replace all occurrences of the required string
+            data = data.replace('default',DATABASE)
+            #close the input file
+            fin.close()
+            #open the input file in write mode
+            fin = open("lineage.yml", "wt")
+            #overrite the input file with the resulting data
+            fin.write(data)
+            #close the file
+            fin.close()
+
             model_id = cml.get_models(params)[0]['id']
             latest_model = cml.get_model({"id": model_id, "latestModelDeployment": True, "latestModelBuild": True})
 
@@ -269,9 +284,9 @@ if len(sys.argv) == 2:
           
                       # Create the YAML file for the model lineage
             yaml_text = \
-                """"ModelOpsChurn":
+                """"ModelOpsChurn_default":
               hive_table_qualified_names:                # this is a predefined key to link to training data
-                - "default.telco_iceberg@cm"               # the qualifiedName of the hive_table object representing                
+                - "default.telco_data_curated@cm"               # the qualifiedName of the hive_table object representing                
               metadata:                                  # this is a predefined key for additional metadata
                 query: "select * from historical_data"   # suggested use case: query used to extract training data
                 training_file: "3_trainStrategy_job.py"       # suggested use case: training file used
@@ -279,10 +294,26 @@ if len(sys.argv) == 2:
 
             with open('lineage.yml', 'w') as lineage:
                 lineage.write(yaml_text)
+                
+            
+            #read input file
+            fin = open("lineage.yml", "rt")
+            #read file contents to string
+            data = fin.read()
+            #replace all occurrences of the required string
+            data = data.replace('default',DATABASE)
+            #close the input file
+            fin.close()
+            #open the input file in write mode
+            fin = open("lineage.yml", "wt")
+            #overrite the input file with the resulting data
+            fin.write(data)
+            #close the file
+            fin.close()                
 
             create_model_params = {
                 "projectId": project_id,
-                "name": "ModelOpsChurn",
+                "name": "ModelOpsChurn_"+DATABASE,
                 "description": "Explain a given model prediction",
                 "visibility": "private",
                 "enableAuth": False,
@@ -329,7 +360,7 @@ if len(sys.argv) == 2:
                     
             create_model_params = {
                 "projectId": project_id,
-                "name": "ModelViz",
+                "name": "ModelViz_"+DATABASE,
                 "description": "visualization a given model prediction",
                 "visibility": "private",
                 "enableAuth": False,
