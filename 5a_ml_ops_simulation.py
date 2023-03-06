@@ -124,10 +124,10 @@ cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
 
 uservariables=cml.get_user()
 if uservariables['username'][-3] == '0':
-  DATABASE = "u"+uservariables['username'][-3:]
+  DATABASE = "user"+uservariables['username'][-3:]
 else:
   #DATABASE = uservariables['username']
-  DATABASE = 'u001'
+  DATABASE = 'user001'
 ## Set the model ID
 # Get the model id from the model you deployed in step 5. These are unique to each 
 # model on CML.
