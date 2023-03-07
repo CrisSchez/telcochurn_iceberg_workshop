@@ -123,11 +123,11 @@ PROJECT_NAME = os.getenv("CDSW_PROJECT")
 cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)  
 
 uservariables=cml.get_user()
-if uservariables['username'][-3] == '0':
+if uservariables['username'][-3] == '9':
   DATABASE = "user"+uservariables['username'][-3:]
 else:
   #DATABASE = uservariables['username']
-  DATABASE = 'user001'
+  DATABASE = 'user002'
 ## Set the model ID
 # Get the model id from the model you deployed in step 5. These are unique to each 
 # model on CML.
